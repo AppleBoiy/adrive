@@ -116,3 +116,96 @@ If upgrading from previous version:
 2. Move database: `mv backend/filemanager.db backend/data/`
 3. Start containers: `make start`
 4. Database will auto-initialize if missing
+
+## Container Images
+
+### Build Images
+
+#### Using Make (Recommended)
+```bash
+# Build all images
+make build
+
+# Build specific service
+docker-compose build frontend
+docker-compose build backend
+```
+
+#### Using Docker Compose
+```bash
+# Build all services
+docker-compose build
+
+# Build with no cache
+docker-compose build --no-cache
+
+# Build specific service
+docker-compose build frontend
+```
+
+#### Using Docker Directly
+```bash
+# Build frontend
+docker build -t adrive-frontend:latest ./frontend
+
+# Build backend
+docker build -t adrive-backend:latest ./backend
+```
+
+### Image Details
+
+#### Frontend Image
+- Base: `node:20-alpine` (build) + `nginx:alpine` (runtime)
+- Size: ~50MB (multi-stage build)
+- Exposed Port: 80
+- Build time: ~2-3 minutes
+
+#### Backend Image
+- Base: `node:20-alpine`
+- Size: ~200MB
+- Exposed Port: 5001
+- Build time: ~1-2 minutes
+
+### Push to Registry
+
+#### Docker Hub
+```bash
+# Tag images
+docker tag adrive-frontend:latest username/adrive-frontend:latest
+docker tag adrive-backend:latest username/adrive-backend:latest
+
+# Push images
+docker push username/adrive-frontend:latest
+docker push username/adrive-backend:latest
+```
+
+#### Private Registry
+```bash
+# Tag images
+docker tag adrive-frontend:latest registry.example.com/adrive-frontend:latest
+docker tag adrive-backend:latest registry.example.com/adrive-backend:latest
+
+# Push images
+docker push registry.example.com/adrive-frontend:latest
+docker push registry.example.com/adrive-backend:latest
+```
+
+### Use Pre-built Images
+
+Update `docker-compose.yml`:
+```yaml
+services:
+  frontend:
+    image: username/adrive-frontend:latest
+    # Remove 'build' section
+    
+  backend:
+    image: username/adrive-backend:latest
+    # Remove 'build' section
+```
+
+Then run:
+```bash
+docker-compose pull
+docker-compose up -d
+```

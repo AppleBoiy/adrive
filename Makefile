@@ -77,3 +77,86 @@ health: ## Check service health
 	@curl -f http://localhost:5001/test || echo "Backend is not healthy"
 	@echo "\nChecking frontend health..."
 	@curl -f http://localhost:3000 || echo "Frontend is not healthy"
+
+# Image Management
+build-frontend: ## Build frontend image only
+	docker-compose build frontend
+
+build-backend: ## Build backend image only
+	docker-compose build backend
+
+build-no-cache: ## Build all images without cache
+	docker-compose build --no-cache
+
+tag-images: ## Tag images for registry (set REGISTRY variable)
+	@if [ -z "$(REGISTRY)" ]; then \
+		echo "Usage: make tag-images REGISTRY=username"; \
+		exit 1; \
+	fi
+	docker tag adrive-frontend:latest $(REGISTRY)/adrive-frontend:latest
+	docker tag adrive-backend:latest $(REGISTRY)/adrive-backend:latest
+	@echo "Images tagged for $(REGISTRY)"
+
+push-images: ## Push images to registry (set REGISTRY variable)
+	@if [ -z "$(REGISTRY)" ]; then \
+		echo "Usage: make push-images REGISTRY=username"; \
+		exit 1; \
+	fi
+	docker push $(REGISTRY)/adrive-frontend:latest
+	docker push $(REGISTRY)/adrive-backend:latest
+	@echo "Images pushed to $(REGISTRY)"
+
+pull-images: ## Pull images from registry (set REGISTRY variable)
+	@if [ -z "$(REGISTRY)" ]; then \
+		echo "Usage: make pull-images REGISTRY=username"; \
+		exit 1; \
+	fi
+	docker pull $(REGISTRY)/adrive-frontend:latest
+	docker pull $(REGISTRY)/adrive-backend:latest
+	@echo "Images pulled from $(REGISTRY)"
+
+save-images: ## Save images to tar files
+	docker save adrive-frontend:latest -o adrive-frontend.tar
+	docker save adrive-backend:latest -o adrive-backend.tar
+	@echo "Images saved to tar files"
+
+load-images: ## Load images from tar files
+	docker load -i adrive-frontend.tar
+	docker load -i adrive-backend.tar
+	@echo "Images loaded from tar files"
+
+image-size: ## Show image sizes
+	@docker images | grep adrive
+
+# GitHub Container Registry (GHCR)
+ghcr-login: ## Login to GitHub Container Registry
+	@echo "Login to GHCR with: docker login ghcr.io -u USERNAME"
+	@echo "Use Personal Access Token (PAT) with write:packages scope"
+
+ghcr-tag: ## Tag images for GHCR (set GITHUB_USER variable)
+	@if [ -z "$(GITHUB_USER)" ]; then \
+		echo "Usage: make ghcr-tag GITHUB_USER=username"; \
+		exit 1; \
+	fi
+	docker tag adrive-frontend:latest ghcr.io/$(GITHUB_USER)/adrive-frontend:latest
+	docker tag adrive-backend:latest ghcr.io/$(GITHUB_USER)/adrive-backend:latest
+	@echo "Images tagged for ghcr.io/$(GITHUB_USER)"
+
+ghcr-push: ## Push images to GHCR (set GITHUB_USER variable)
+	@if [ -z "$(GITHUB_USER)" ]; then \
+		echo "Usage: make ghcr-push GITHUB_USER=username"; \
+		exit 1; \
+	fi
+	docker push ghcr.io/$(GITHUB_USER)/adrive-frontend:latest
+	docker push ghcr.io/$(GITHUB_USER)/adrive-backend:latest
+	@echo "Images pushed to ghcr.io/$(GITHUB_USER)"
+
+ghcr-pull: ## Pull images from GHCR (set GITHUB_USER variable)
+	@if [ -z "$(GITHUB_USER)" ]; then \
+		echo "Usage: make ghcr-pull GITHUB_USER=username"; \
+		exit 1; \
+	fi
+	docker pull ghcr.io/$(GITHUB_USER)/adrive-frontend:latest
+	docker pull ghcr.io/$(GITHUB_USER)/adrive-backend:latest
+	@echo "Images pulled from ghcr.io/$(GITHUB_USER)"
+

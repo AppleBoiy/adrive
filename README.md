@@ -17,6 +17,8 @@ A modern, full-stack file management system with support for both local VM stora
 ## Documentation
 
 - **[CHANGELOG.md](CHANGELOG.md)** - All changes and fixes
+- **[GHCR_QUICK_START.md](GHCR_QUICK_START.md)** - GitHub Container Registry guide
+- **[CONTAINER_IMAGES.md](CONTAINER_IMAGES.md)** - Complete container image guide
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
 - **[QUICK_START.md](QUICK_START.md)** - Quick start guide
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment instructions
