@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# Database files
+*.db
+*.db-*
+*.backup.*
+
+# Data directory
+backend/data/*
+!backend/data/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Storage
+backend/vm_storage/*
+!backend/vm_storage/.gitkeep
+
+# Service account (sensitive)
+backend/service-account.json
+
+# Temporary files
+*.tmp
+*.temp
+cookies.txt
