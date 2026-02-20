@@ -86,11 +86,44 @@ if (!fs.existsSync(VM_STORAGE_PATH)) {
   console.log('Created vm_storage directory');
 }
 
-const storage = new Storage({ keyFilename: 'service-account.json' });
-const bucketName = process.env.BUCKET_NAME;
+// Google Cloud Storage - Optional
+let storage = null;
+let bucketName = null;
+let gcsEnabled = false;
+
+const serviceAccountPath = path.join(__dirname, 'service-account.json');
+if (fs.existsSync(serviceAccountPath)) {
+  try {
+    storage = new Storage({ keyFilename: serviceAccountPath });
+    bucketName = process.env.BUCKET_NAME;
+    
+    if (bucketName) {
+      gcsEnabled = true;
+      console.log(`✓ GCS enabled: ${bucketName}`);
+    } else {
+      console.warn('⚠ service-account.json found but BUCKET_NAME not set');
+    }
+  } catch (err) {
+    console.error('✗ Failed to initialize GCS:', err.message);
+  }
+} else {
+  console.log('ℹ GCS disabled: service-account.json not found (VM storage only)');
+}
 
 // Initialize file sync
 const fileSync = new FileSync(VM_STORAGE_PATH, storage, bucketName);
+
+// Middleware to check if GCS is enabled for bucket operations
+const requireGCS = (req, res, next) => {
+  const { location } = req.params;
+  if (location === 'bucket' && !gcsEnabled) {
+    return res.status(503).json({ 
+      error: 'GCS storage not available',
+      message: 'Google Cloud Storage is not configured. Please provide service-account.json and set BUCKET_NAME environment variable.'
+    });
+  }
+  next();
+};
 
 // Routes
 app.use('/storage', express.static(VM_STORAGE_PATH, {
@@ -150,7 +183,7 @@ const ensureAuthenticated = (req, res, next) => {
 };
 
 // Upload Files
-app.post('/api/upload/:location', ensureAuthenticated, (req, res) => {
+app.post('/api/upload/:location', ensureAuthenticated, requireGCS, (req, res) => {
   const { location } = req.params;
 
   memoryUpload.array('files')(req, res, async (err) => {
@@ -257,7 +290,7 @@ app.post('/api/upload/:location', ensureAuthenticated, (req, res) => {
 });
 
 // Create Folders
-app.post('/api/folders/:location', ensureAuthenticated, async (req, res) => {
+app.post('/api/folders/:location', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location } = req.params;
   const { name, path: targetPath } = req.body;
 
@@ -333,7 +366,16 @@ app.get('/test', (req, res) => {
   res.status(200).send('Backend is reachable');
 });
 
-app.get('/api/files/:location', ensureAuthenticated, async (req, res) => {
+// Storage status endpoint
+app.get('/api/storage/status', (req, res) => {
+  res.json({
+    vm: true,
+    gcs: gcsEnabled,
+    bucket: gcsEnabled ? bucketName : null
+  });
+});
+
+app.get('/api/files/:location', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location } = req.params;
 
   try {
@@ -358,7 +400,7 @@ app.get('/api/files/:location', ensureAuthenticated, async (req, res) => {
 });
 
 // Download Files - returns URL for file access
-app.get('/api/download/:location/:filename', ensureAuthenticated, async (req, res) => {
+app.get('/api/download/:location/:filename', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location, filename } = req.params;
 
   try {
@@ -445,7 +487,7 @@ app.get(/^\/api\/file\/(vm|bucket)\/(.+)/, ensureAuthenticated, async (req, res)
 });
 
 // Move Files
-app.post('/api/move/:location', ensureAuthenticated, async (req, res) => {
+app.post('/api/move/:location', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location } = req.params;
   const { oldName, newName } = req.body;
 
@@ -503,7 +545,7 @@ app.post('/api/move/:location', ensureAuthenticated, async (req, res) => {
 });
 
 // Remove Files (Soft Delete - Move to Trash)
-app.delete('/api/files/:location/:filename', ensureAuthenticated, async (req, res) => {
+app.delete('/api/files/:location/:filename', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location, filename } = req.params;
 
   try {
@@ -532,7 +574,7 @@ app.delete('/api/files/:location/:filename', ensureAuthenticated, async (req, re
 });
 
 // Get trash items
-app.get('/api/trash/:location', ensureAuthenticated, (req, res) => {
+app.get('/api/trash/:location', ensureAuthenticated, requireGCS, (req, res) => {
   const { location } = req.params;
   
   try {
@@ -545,7 +587,7 @@ app.get('/api/trash/:location', ensureAuthenticated, (req, res) => {
 });
 
 // Restore file from trash
-app.post('/api/trash/:location/:fileId/restore', ensureAuthenticated, (req, res) => {
+app.post('/api/trash/:location/:fileId/restore', ensureAuthenticated, requireGCS, (req, res) => {
   const { fileId } = req.params;
   
   try {
@@ -570,7 +612,7 @@ app.post('/api/trash/:location/:fileId/restore', ensureAuthenticated, (req, res)
 });
 
 // Empty trash (delete all trash items) - MUST be before /:fileId route
-app.delete('/api/trash/:location/empty', ensureAuthenticated, async (req, res) => {
+app.delete('/api/trash/:location/empty', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location } = req.params;
   
   try {
@@ -610,7 +652,7 @@ app.delete('/api/trash/:location/empty', ensureAuthenticated, async (req, res) =
 });
 
 // Permanently delete file from trash
-app.delete('/api/trash/:location/:fileId', ensureAuthenticated, async (req, res) => {
+app.delete('/api/trash/:location/:fileId', ensureAuthenticated, requireGCS, async (req, res) => {
   const { location, fileId } = req.params;
   
   try {

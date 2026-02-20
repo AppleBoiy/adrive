@@ -100,6 +100,7 @@ const App = () => {
   const [fileTagsMap, setFileTagsMap] = useState({});
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [tagsRefreshTrigger, setTagsRefreshTrigger] = useState(0);
+  const [storageStatus, setStorageStatus] = useState({ vm: true, gcs: false });
 
   const fetchFiles = () => {
     if (!user) return;
@@ -118,6 +119,16 @@ const App = () => {
       .then(userData => {
         setUser(userData);
         setLoading(false);
+        // Check storage status
+        return fetch('/api/storage/status');
+      })
+      .then(res => res.json())
+      .then(status => {
+        setStorageStatus(status);
+        // If GCS is not available and current location is bucket, switch to VM
+        if (!status.gcs && location === 'bucket') {
+          setLocation('vm');
+        }
       })
       .catch(() => {
         setUser(null);
@@ -646,6 +657,7 @@ const App = () => {
         selectedTag={selectedTag}
         onOpenTagManager={() => setIsTagManagerOpen(true)}
         refreshTrigger={tagsRefreshTrigger}
+        storageStatus={storageStatus}
       />
 
       <div className="flex-1 flex flex-col relative min-w-0">

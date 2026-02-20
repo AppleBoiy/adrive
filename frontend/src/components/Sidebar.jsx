@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { HardDrive, Cloud, Upload, LogOut, X, Database, Tag, Settings, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 
-const Sidebar = ({ currentLocation, setLocation, onUpload, targetPath, user, onLogout, isOpen, onClose, onOpenDatabase, onTagFilter, selectedTag, onOpenTagManager, onOpenTrash, refreshTrigger }) => {
+const Sidebar = ({ currentLocation, setLocation, onUpload, targetPath, user, onLogout, isOpen, onClose, onOpenDatabase, onTagFilter, selectedTag, onOpenTagManager, onOpenTrash, refreshTrigger, storageStatus = { vm: true, gcs: true } }) => {
   const fileInputRef = useRef(null);
   const [tags, setTags] = useState([]);
   const [isLocationsExpanded, setIsLocationsExpanded] = useState(true);
@@ -9,9 +9,9 @@ const Sidebar = ({ currentLocation, setLocation, onUpload, targetPath, user, onL
   const [isDeveloperExpanded, setIsDeveloperExpanded] = useState(true);
   
   const menuItems = [
-    { id: 'vm', name: 'VM Disk', icon: <HardDrive size={16} /> },
-    { id: 'bucket', name: 'GCS Bucket', icon: <Cloud size={16} /> },
-  ];
+    { id: 'vm', name: 'VM Disk', icon: <HardDrive size={16} />, enabled: storageStatus.vm },
+    { id: 'bucket', name: 'GCS Bucket', icon: <Cloud size={16} />, enabled: storageStatus.gcs },
+  ].filter(item => item.enabled);
 
   useEffect(() => {
     fetchTags();

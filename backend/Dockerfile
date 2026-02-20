@@ -11,10 +11,19 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copy application files
 COPY *.js ./
-COPY service-account.json ./
 
 # Create necessary directories
 RUN mkdir -p vm_storage data
+
+# Copy service-account.json if it exists (optional for GCS)
+# Pattern matches service-account.json or .service-account.placeholder
+COPY --chown=nodejs:nodejs .service-account.placeholder service-account.json* ./
+RUN if [ -f service-account.json ]; then \
+      echo "✓ GCS: service-account.json found"; \
+    else \
+      echo "ℹ GCS: service-account.json not found (VM storage only)"; \
+    fi && \
+    rm -f .service-account.placeholder
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

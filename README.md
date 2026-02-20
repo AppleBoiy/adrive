@@ -1,10 +1,10 @@
 # ADrive - Cloud File Manager
 
-A modern, full-stack file management system with support for both local VM storage and Google Cloud Storage (GCS). Features include file organization with tags, trash management with auto-cleanup, and a responsive macOS-inspired interface.
+A modern, full-stack file management system with support for both local VM storage and Google Cloud Storage (GCS). GCS is optional - the application works perfectly with VM storage only.
 
 ## Features
 
-- **Dual Storage Support**: VM local storage and Google Cloud Storage
+- **Dual Storage Support**: VM local storage and Google Cloud Storage (GCS is optional)
 - **File Management**: Upload, download, rename, move, and delete files
 - **Folder Support**: Create folders and organize files hierarchically
 - **Tag System**: Organize files with colored tags
@@ -29,7 +29,9 @@ A modern, full-stack file management system with support for both local VM stora
 ### Prerequisites
 - Docker and Docker Compose
 - Google Cloud Storage bucket (optional, for GCS storage)
-- Service account JSON key (for GCS)
+- Service account JSON key (optional, for GCS)
+
+**Note**: GCS is completely optional. If you don't provide `service-account.json`, the application will work with VM storage only.
 
 ### Installation
 

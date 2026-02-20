@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file.
 - Database viewer feature for development mode
 - Tag management system for file organization
 - Trash functionality with 30-day auto-cleanup
+- GitHub Container Registry (GHCR) support with automated CI/CD
+- Storage status API endpoint (`/api/storage/status`)
+- Optional GCS support - works with VM storage only if service-account.json not provided
 
 ### Changed
 - Updated Dockerfiles with best practices:
@@ -30,6 +33,8 @@ All notable changes to this project will be documented in this file.
 - Moved database from `backend/filemanager.db` to `backend/data/filemanager.db`
 - Changed Docker volume mount from `/app` to `/app/data` for better persistence
 - Database now auto-initializes on startup with `CREATE TABLE IF NOT EXISTS`
+- GCS is now optional - application works with VM storage only if service-account.json is not provided
+- Frontend automatically hides GCS bucket option when not available
 
 ### Fixed
 - **File Streaming**: Removed proxy endpoint, all files now stream through `/api/file/:location/*`
