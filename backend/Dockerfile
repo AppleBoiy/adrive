@@ -15,6 +15,10 @@ COPY *.js ./
 # Create necessary directories
 RUN mkdir -p vm_storage data
 
+# Create non-root user first
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
 # Copy service-account.json if it exists (optional for GCS)
 # Pattern matches service-account.json or .service-account.placeholder
 COPY --chown=nodejs:nodejs .service-account.placeholder service-account.json* ./
@@ -25,10 +29,8 @@ RUN if [ -f service-account.json ]; then \
     fi && \
     rm -f .service-account.placeholder
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 && \
-    chown -R nodejs:nodejs /app
+# Set ownership of all files
+RUN chown -R nodejs:nodejs /app
 
 # Switch to non-root user
 USER nodejs
